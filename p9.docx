@@ -1,0 +1,246 @@
+<!--
+Simple Real Estate Listing (Beginner-friendly) — No images version
+Single-file HTML with minimal CSS and basic JS for filtering + inquiry form.
+Save as: real-estate-beginner-no-images.html and open in your browser.
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Simple Real Estate Listings — No Images</title>
+  <style>
+    /* Minimal CSS for clarity */
+    body{font-family: Arial, sans-serif;margin:16px;background:#f7f7f7}
+    header{margin-bottom:12px}
+    h1{font-size:20px;margin:0}
+    .container{display:flex;gap:16px}
+    .sidebar{flex:0 0 250px;padding:12px;background:#fff;border-radius:6px}
+    .main{flex:1}
+    .card{background:#fff;padding:12px;margin-bottom:12px;border-radius:6px}
+    .badge{display:inline-block;padding:6px 8px;border-radius:4px;background:#eee;margin-right:6px;font-size:13px}
+    label{display:block;margin:8px 0 4px;font-size:14px}
+    input,select,textarea{width:100%;padding:8px;box-sizing:border-box}
+    .flex-row{display:flex;gap:8px}
+    .btn{display:inline-block;padding:8px 12px;border:none;border-radius:4px;cursor:pointer}
+    .btn-primary{background:#1e90ff;color:#fff}
+    .btn-secondary{background:#ddd}
+    .small{font-size:13px;color:#555}
+    footer{margin-top:16px;font-size:13px;color:#666}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Alpha Real Estate </h1>
+    
+  </header>
+
+  <section class="container">
+    <!-- Filters / Search -->
+    <aside class="sidebar card" aria-label="search filters">
+      <h2 style="font-size:16px;margin:0 0 8px">Search Filters</h2>
+
+      <label for="q-location">Location</label>
+      <input id="q-location" type="text" placeholder="e.g. New York, Mumbai">
+
+      <div class="flex-row">
+        <div style="flex:1">
+          <label for="min-price">Min Price</label>
+          <input id="min-price" type="number" placeholder="0">
+        </div>
+        <div style="flex:1">
+          <label for="max-price">Max Price</label>
+          <input id="max-price" type="number" placeholder="99999999">
+        </div>
+      </div>
+
+      <label for="beds">Bedrooms</label>
+      <select id="beds">
+        <option value="any">Any</option>
+        <option value="1">1+</option>
+        <option value="2">2+</option>
+        <option value="3">3+</option>
+        <option value="4">4+</option>
+      </select>
+
+      <label for="type">Property Type</label>
+      <select id="type">
+        <option value="any">Any</option>
+        <option value="apartment">Apartment</option>
+        <option value="house">House</option>
+        <option value="studio">Studio</option>
+      </select>
+
+      <div style="margin-top:10px">
+        <button id="apply" class="btn btn-primary">Apply Filters</button>
+        <button id="clear" class="btn btn-secondary">Clear</button>
+      </div>
+    </aside>
+
+    <!-- Listings -->
+    <main class="main">
+      <div id="listings">
+        <!-- Property cards will be injected here by JavaScript -->
+      </div>
+
+      <!-- Inquiry form (simple) -->
+      <div class="card">
+        <h2 style="font-size:16px;margin:0 0 8px">Inquiry Form</h2>
+        <p class="small">Send an inquiry about a property. (This example does not submit to a server — it shows client-side validation.)</p>
+        <form id="inquiry-form">
+          <label for="in-name">Your Name</label>
+          <input id="in-name" type="text" required>
+
+          <label for="in-email">Email</label>
+          <input id="in-email" type="email" required>
+
+          <label for="in-property">Property ID (choose one)</label>
+          <select id="in-property">
+            <!-- options filled by JS to match listings -->
+          </select>
+
+          <label for="in-message">Message</label>
+          <textarea id="in-message" rows="4" placeholder="I'm interested..." required></textarea>
+
+          <div style="margin-top:8px">
+            <button type="submit" class="btn btn-primary">Send Inquiry</button>
+          </div>
+        </form>
+        <p id="inquiry-result" class="small" style="margin-top:8px;color:green;display:none"></p>
+      </div>
+
+    </main>
+  </section>
+
+  <footer>
+    <p>Note: This version avoids images entirely. It uses badges and text to indicate property attributes.</p>
+  </footer>
+
+  <script>
+    // =====================
+    // Sample data (no image fields)
+    // =====================
+    const properties = [
+      {id: 'P1001', title: 'Sunny 2BHK in Downtown', location: 'Mumbai', price: 8000000, beds:2, type:'apartment'},
+      {id: 'P1002', title: 'Cozy Studio near Park', location: 'Mumbai', price: 3500000, beds:0, type:'studio'},
+      {id: 'P1003', title: 'Family House with Garden', location: 'Pune', price: 12000000, beds:4, type:'house'},
+      {id: 'P1004', title: 'Modern 3BHK Apartment', location: 'Mumbai', price: 15000000, beds:3, type:'apartment'},
+      {id: 'P1005', title: 'Affordable 1BHK', location: 'Pune', price: 2500000, beds:1, type:'apartment'}
+    ];
+
+    const listingsEl = document.getElementById('listings');
+    const inProperty = document.getElementById('in-property');
+
+    function renderListings(list){
+      listingsEl.innerHTML = '';
+      list.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        // Use text badges instead of images
+        const badges = document.createElement('div');
+        badges.innerHTML = `
+          <span class="badge">ID: ${p.id}</span>
+          <span class="badge">${p.type}</span>
+          <span class="badge">${p.beds} beds</span>
+          <span class="badge">${p.location}</span>
+        `;
+
+        const info = document.createElement('div');
+        info.innerHTML = `
+          <strong>${p.title}</strong>
+          <p class=\"small\" style=\"margin:6px 0\">₹ ${p.price.toLocaleString()}</p>
+          <p class=\"small\">Short description: Good neighborhood, close to amenities.</p>
+          <div style=\"margin-top:8px\">
+            <button class=\"btn btn-primary\" onclick=\"fillInquiry('${p.id}')\">Inquire about this</button>
+          </div>
+        `;
+
+        card.appendChild(badges);
+        card.appendChild(info);
+        listingsEl.appendChild(card);
+      });
+
+      // fill inquiry select
+      inProperty.innerHTML = '';
+      list.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.id + ' — ' + p.title;
+        inProperty.appendChild(opt);
+      });
+    }
+
+    // On load show all
+    renderListings(properties);
+
+    // =====================
+    // Filtering logic (simple and readable)
+    // =====================
+    document.getElementById('apply').addEventListener('click', function(){
+      const loc = document.getElementById('q-location').value.trim().toLowerCase();
+      const min = parseInt(document.getElementById('min-price').value) || 0;
+      const maxVal = document.getElementById('max-price').value;
+      const max = maxVal ? parseInt(maxVal) : Infinity;
+      const beds = document.getElementById('beds').value;
+      const type = document.getElementById('type').value;
+
+      const filtered = properties.filter(p => {
+        if(loc && !p.location.toLowerCase().includes(loc)) return false;
+        if(p.price < min) return false;
+        if(p.price > max) return false;
+        if(beds !== 'any'){
+          const b = parseInt(beds);
+          if(p.beds < b) return false;
+        }
+        if(type !== 'any' && p.type !== type) return false;
+        return true;
+      });
+
+      renderListings(filtered);
+    });
+
+    document.getElementById('clear').addEventListener('click', function(){
+      document.getElementById('q-location').value = '';
+      document.getElementById('min-price').value = '';
+      document.getElementById('max-price').value = '';
+      document.getElementById('beds').value = 'any';
+      document.getElementById('type').value = 'any';
+      renderListings(properties);
+    });
+
+    // =====================
+    // Inquiry form handling (client-side only)
+    // =====================
+    const form = document.getElementById('inquiry-form');
+    const result = document.getElementById('inquiry-result');
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      const name = document.getElementById('in-name').value.trim();
+      const email = document.getElementById('in-email').value.trim();
+      const prop = document.getElementById('in-property').value;
+      const msg = document.getElementById('in-message').value.trim();
+
+      if(!name || !email || !msg){
+        alert('Please fill all required fields.');
+        return;
+      }
+
+      result.style.display = 'block';
+      result.textContent = `Thanks ${name}! Your inquiry for ${prop} has been recorded (demo only).`;
+      form.reset();
+      renderListings(properties);
+    });
+
+    function fillInquiry(id){
+      document.getElementById('in-property').value = id;
+      window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+      document.getElementById('in-name').focus();
+    }
+
+    window.fillInquiry = fillInquiry;
+  </script>
+</body>
+</html>
